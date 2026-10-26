@@ -60,7 +60,7 @@ with sync_playwright() as p:
     b = p.chromium.launch()
     for pg in pages:
         for w in widths + ([821, 981] if not '--w' in sys.argv else []):
-            ctx = b.new_context(viewport={'width': w, 'height': 800 if w > 700 else 844})
+            ctx = b.new_context(viewport={'width': w, 'height': 844 if w < 500 else (1024 if w < 800 else 800)})
             page = ctx.new_page()
             errs = []
             page.on('pageerror', lambda e: errs.append(str(e)))
@@ -72,6 +72,8 @@ with sync_playwright() as p:
             probs = r['out'] + errs
             if r['h1'] != 1: probs.append('h1=%d' % r['h1'])
             if r['foot'] > 0.31 and w >= 768: probs.append('pied > 30 %% (%s)' % r['foot'])
+            for sid, ratio in ([] if w in (821, 981) else r['secs']):
+                if ratio > 1.3: probs.append(f'section {sid} = {ratio} écrans')
             if w in (390, 414, 1280):
                 info.append((pg, w, r['secs'], r['foot']))
             if probs:
